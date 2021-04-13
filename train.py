@@ -110,7 +110,7 @@ def train(train_loader, valid_loader, model, optim, criterion, num_epochs):
         val_losses.append((total_step, val_loss))
         if val_loss < lowest_val:
             lowest_val = val_loss
-            torch.save(model, 'output/transformer.pth')
+            torch.save(model, '/content/drive/MyDrive/transformer-translation/output/transformer.pth')
         print(f'Val Loss: {val_loss}')
     return train_losses, val_losses
 
