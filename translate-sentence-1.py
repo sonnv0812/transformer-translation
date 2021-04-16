@@ -1,3 +1,4 @@
+import codecs
 import pickle
 from einops import rearrange
 
@@ -6,6 +7,8 @@ import torch
 
 
 def main():
+    out_file = codecs.open(freds.txt, "w+", "utf-8")
+    input_file = codecs.open(en.txt, "r", "utf-8")
     # Load the trained model, Spacy tokenizer, and frequency lists
     model = torch.load('output/transformer.pth')
     lang_model = spacy.load('en')
@@ -15,26 +18,33 @@ def main():
         fr_freq_list = pickle.load(f)
 
     # Tokenize input
-    sentence = input('Please enter your english sentence: ')
-    sentence = tokenize(sentence, en_freq_list, lang_model)
+    # sentence = input('Please enter your english sentence: ')
+    with open(en.txt) as f:
+        i = 1
+        for line in f:
+            sentence = tokenize(line, en_freq_list, lang_model)
 
-    # Generate the translated sentence, feeding the model's output into its input
-    translated_sentence = [fr_freq_list['[SOS]']]
-    i = 0
-    while int(translated_sentence[-1]) != fr_freq_list['[EOS]'] and i < 15:
-        output = forward_model(model, sentence, translated_sentence).to('cuda')
-        values, indices = torch.topk(output, 5)
-        translated_sentence.append(int(indices[-1][0]))
+            # Generate the translated sentence, feeding the model's output into its input
+            translated_sentence = [fr_freq_list['[SOS]']]
+            j = 0
+            while int(translated_sentence[-1]) != fr_freq_list['[EOS]'] and j < 15:
+                output = forward_model(model, sentence, translated_sentence).to('cuda')
+                values, indices = torch.topk(output, 5)
+                translated_sentence.append(int(indices[-1][0]))
 
-    # Print out the translated sentence
-    print(detokenize(translated_sentence, fr_freq_list))
+            # Print out the translated sentence
+            # print(detokenize(translated_sentence, fr_freq_list))
+            out_file.write(detokenize(translated_sentence, fr_freq_list))
+
+            i += 1
 
 
 def forward_model(model, src, tgt):
     src = torch.tensor(src).unsqueeze(0).long().to('cuda')
     tgt = torch.tensor(tgt).unsqueeze(0).to('cuda')
     tgt_mask = gen_nopeek_mask(tgt.shape[1]).to('cuda')
-    output = model.forward(src, tgt, src_key_padding_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None, tgt_mask=tgt_mask)
+    output = model.forward(src, tgt, src_key_padding_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None,
+                           tgt_mask=tgt_mask)
 
     return output.squeeze(0).to('cpu')
 
