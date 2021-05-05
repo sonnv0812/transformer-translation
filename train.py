@@ -15,18 +15,18 @@ from model import LanguageTransformer
 
 
 @click.command()
-@click.argument('num_epochs', type=int,  default=20)
-@click.argument('max_seq_length', type=int,  default=96)
-@click.argument('num_tokens', type=int,  default=2000)
-@click.argument('vocab_size', type=int,  default=10000 + 4)
-@click.argument('d_model', type=int,  default=512)
-@click.argument('num_encoder_layers', type=int,  default=6)
-@click.argument('num_decoder_layers', type=int,  default=6)
-@click.argument('dim_feedforward', type=int,  default=2048)
-@click.argument('nhead', type=int,  default=8)
-@click.argument('pos_dropout', type=float,  default=0.1)
-@click.argument('trans_dropout', type=float,  default=0.1)
-@click.argument('n_warmup_steps', type=int,  default=4000)
+@click.argument('num_epochs', type=int, default=20)
+@click.argument('max_seq_length', type=int, default=96)
+@click.argument('num_tokens', type=int, default=2000)
+@click.argument('vocab_size', type=int, default=10000 + 4)
+@click.argument('d_model', type=int, default=512)
+@click.argument('num_encoder_layers', type=int, default=6)
+@click.argument('num_decoder_layers', type=int, default=6)
+@click.argument('dim_feedforward', type=int, default=2048)
+@click.argument('nhead', type=int, default=8)
+@click.argument('pos_dropout', type=float, default=0.1)
+@click.argument('trans_dropout', type=float, default=0.1)
+@click.argument('n_warmup_steps', type=int, default=4000)
 def main(**kwargs):
     project_path = str(Path(__file__).resolve().parents[0])
 
@@ -86,7 +86,8 @@ def train(train_loader, valid_loader, model, optim, criterion, num_epochs):
 
             # Forward
             optim.zero_grad()
-            outputs = model(src, tgt_inp, src_key_padding_mask, tgt_key_padding_mask[:, :-1], memory_key_padding_mask, tgt_mask)
+            outputs = model(src, tgt_inp, src_key_padding_mask, tgt_key_padding_mask[:, :-1], memory_key_padding_mask,
+                            tgt_mask)
             loss = criterion(rearrange(outputs, 'b t v -> (b t) v'), rearrange(tgt_out, 'b o -> (b o)'))
 
             # Backpropagate and update optim
@@ -129,7 +130,8 @@ def validate(valid_loader, model, criterion):
             tgt_out = tgt[:, 1:].contiguous()
             tgt_mask = gen_nopeek_mask(tgt_inp.shape[1]).to('cuda')
 
-            outputs = model(src, tgt_inp, src_key_padding_mask, tgt_key_padding_mask[:, :-1], memory_key_padding_mask, tgt_mask)
+            outputs = model(src, tgt_inp, src_key_padding_mask, tgt_key_padding_mask[:, :-1], memory_key_padding_mask,
+                            tgt_mask)
             loss = criterion(rearrange(outputs, 'b t v -> (b t) v'), rearrange(tgt_out, 'b o -> (b o)'))
 
             total_loss += loss.item()
